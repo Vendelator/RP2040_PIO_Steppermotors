@@ -165,20 +165,16 @@ def position(x = 0, y = 0):
     x_angle = step_angle * x_last
     y_angle = step_angle * y_last
     if x != 0 and y != 0:
-        print("Two arguments")
         print("x at:", x_angle, "\u00B0")
         print("y at:", y_angle, "\u00B0")
         return x_angle, y_angle
     elif x != 0:
-        print("Only X")
         print("x at:", x_angle, "\u00B0")
         return x_angle
     elif y != 0:
-        print("Only Y")
         print("y at:", y_angle, "\u00B0")
         return y_angle
     else:
-        print("No arguments") # Used to get a print in REPL
         print("x at:", x_angle, "\u00B0")
         print("y at:", y_angle, "\u00B0")
     
@@ -187,14 +183,3 @@ if __name__ == "__main__":
     print(machine.freq()/1000000, "MHz clock-speed")
     input("\nPress any key to test:\ninstructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))")
     instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
-#     t3 = time.ticks_us()
-#     for i in range(len(instruction_tuple)): # loads each item within the instruction tuple and assign to each motor.
-#         x = int(instruction_tuple[i][0])
-#         y = int(instruction_tuple[i][1])
-#         print("stepping to: " + "x:" +  str(x) + ", " + "y:" + str(y))
-#         steps(x, y)
-#         time.sleep(0.1)
-#     t4 = time.ticks_us()
-#     print(time.ticks_diff(t2, t1))
-#     print(time.ticks_diff(t4, t3))
-

@@ -24,6 +24,7 @@ This will drive most stepper driver boards that uses a Step pin and Direction Pi
 
 ## Roadmap (and ideas in no particular order)
 - Create 3 files depending on how many motors that are pre-configured 2, 3 and 4 motors.
+- Look into usin DMA or Array to feed PIO program with instructions to simulate acceleration and retardation? 
 - 3D model stl-files to be used as an example. (Crude models exists already)
 - Add primitive ramp-up / ramp-down functionallity over PIO
 - Add alternative method that works for both Pico and Pico W. It's important to get the visual feedback.

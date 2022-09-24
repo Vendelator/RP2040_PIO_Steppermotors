@@ -45,11 +45,11 @@ import stepper_controller as ctrl
 # Some basic scorcery can be done to zero stepper by using position inside angle
 # ctrl.angle(-1*ctrl. position (1, 0), -1*ctrl. position (0, 1)) which flips the current angles polarities and use them as instructions.
 
-input("Press enter to perform test")
-
 #TEST
-ctrl.angle(180, -45)
-ctrl.steps(-1600, 400)
-ctrl.instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
-input("Press enter to return to zero")
-ctrl.angle(-1*ctrl. position (1, 0), -1*ctrl. position (0, 1))
+if __name__ == "__main__":
+    input("\nPress enter to perform test")
+    ctrl.angle(180, -45)
+    ctrl.steps(-1600, 400)
+    ctrl.instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
+    input("Press enter to return to zero")
+    ctrl.angle(-1*ctrl. position (1, 0), -1*ctrl. position (0, 1))

@@ -7,9 +7,9 @@ import stepper_controller as ctrl
 
 # About the output in REPL and arguments used in the program.
 # Steps are always integers, there are no half steps.
-# Angles can be float as they are rounded to the closest integer.
+# Angles can be float or integers.
 # Elements within instructor tuple are treated as steps.
-# Calling position will give the angle that is required 
+# Calling position will give the angle that is required .
 
                    ### Angle ###
 # Takes a desired positive or negative angle and calculates how.
@@ -35,21 +35,23 @@ import stepper_controller as ctrl
                    ### Position ###
 # Calling this function with no arguments tells out program at what angle the motor is currenly at. 720 deg would
 # mean we are at position zero, but have turned 2 full turns.
-# ctrl.position() - Prints corrent angle for both motors.
-# ctrl. position (1, 0) - Returns angle for motor x
-# ctrl. position (0, 1) - Returns angle for motor y'
-# ctrl. position (1, 1) - Returns angle for motor x and y from a Tuple
+# ctrl.position() - Prints angle for both motors.
+# ctrl. position (1, 0) - Returns angle for motor x.
+# ctrl. position (0, 1) - Returns angle for motor y.
+# ctrl. position (1, 1) - Returns angle for motor x and y in from of a Tuple.
 # The tuple can be accessed with ctrl.position(1, 1)[0] for motor x (Element 0)
-# and ctrl.position(1, 1)[1] for motor y (Element 1)
+# and ctrl.position(1, 1)[1] for motor y (Element 1).
 
 # Some basic scorcery can be done to zero stepper by using position inside angle
 # ctrl.angle(-1*ctrl. position (1, 0), -1*ctrl. position (0, 1)) which flips the current angles polarities and use them as instructions.
+# The function ctrl.zero() does this with less input. This is not the same as home.
 
 #TEST
 if __name__ == "__main__":
+    machine.freq(250_000_000) # Setch CPU frequency to 250 MHz
     input("\nPress enter to perform test")
-    ctrl.angle(180, -45)
-    ctrl.steps(-1600, 400)
-    ctrl.instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
+    ctrl.angle(90, -90) # Moves X 90 Deg CW and Y -90 DEG CCW
+    ctrl.steps(-1600, 1600) # Moves X 1600 steps CCW and Y 1600 steps CW
+    ctrl.instructor(((200, 200), (-400, 400), (800, -800), (1600, -1600), (-3200, 3200)))
     input("Press enter to return to zero")
-    ctrl.angle(-1*ctrl. position (1, 0), -1*ctrl. position (0, 1))
+    ctrl.zero() # Checks how many steps from start and rotates back.

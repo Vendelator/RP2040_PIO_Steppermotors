@@ -6,8 +6,8 @@ import rp2                       # Is used to make PIO programs
          ### Variables ###
 motor_1 = False                   # To be able to check if a motor is completed
 motor_2 = False                   # - " -
-x_last = 0
-y_last = 0
+x_last = 0                        # To store relative position in steps
+y_last = 0                        # - " -
 
          ### Stepper motor setup ###
 drv_ms = 16 # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 132

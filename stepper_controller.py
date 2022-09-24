@@ -6,8 +6,10 @@ import rp2                       # Is used to make PIO programs
      ### Variables ###
 motor_1 = False                   # To be able to check if a motor is completed
 motor_2 = False                   # - " -
-x = 0                             # Creates variable early to avoid errors
-y = 0                             # - " -
+# x = 0                             # Creates variable early to avoid errors
+# y = 0                             # - " -
+x_last = 0
+y_last = 0
 
      ### Stepper motor setup ###
 drv_ms = 16 # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 132
@@ -76,18 +78,14 @@ def step_speed():
 # When they are triggered, motor_n turns True and
 # they print x or y steps to REPL and which statemachine is done.
 def pio_0_handler(sm):
-    global motor_1, x
-    # Print a (wrapping) timestamp, and the state machine object.
-    #print(time.ticks_ms(), sm)
+    global motor_1
     motor_1 = True
-    print(sm, "x: ", x)
+    print(sm, "x: ", x_last)
 
 def pio_1_handler(sm):
-    global motor_2, y
-    # Print a (wrapping) timestamp, and the state machine object.
-    #print(time.ticks_ms(), sm)
+    global motor_2
     motor_2 = True
-    print(sm, "y: ", y)
+    print(sm, "y: ", y_last)
 
      ### Setting up state machines ###
 # Motor 1 is separated in the code to better explain each step.
@@ -122,7 +120,9 @@ sm_0.active(1), sm_1.active(1) # State machine 0 and 1 in PIO block 0
 sm_4.active(1), sm_5.active(1) # State machine 4 and 5 in PIO block 1
 
 def steps(x, y): # Feeds the PIO programs and activates them.
-    global motor_1, motor_2
+    global motor_1, motor_2, x_last, y_last
+    x_last = x + x_last
+    y_last = y + y_last
     motor_1 = False
     motor_2 = False
     x_steps = x
@@ -137,11 +137,13 @@ def steps(x, y): # Feeds the PIO programs and activates them.
     sm_4.put(y_steps)
     activation_pin.value(1)
     print("\n### Stepping the steps ###")
+    print("\nstepping to: " + "x:" +  str(x_last) + ", " + "y:" + str(y_last))
     while True:
         if motor_1 and motor_2:
             dir_pin_1.value(0)
             dir_pin_2.value(0)
             activation_pin.value(0) # This is active until both processes have signaled that they are done.
+            position()
             return
         time.sleep_ms(1)
 
@@ -149,26 +151,50 @@ def angle(x_deg, y_deg):
     global step_angle
     x_steps = round(x_deg / step_angle)
     y_steps = round(y_deg / step_angle)
-    if int(x_deg) < 0:
-        dir_pin_1.value(1)
-        x_steps = x_steps * (-1)
-    if int(y_deg) < 0:
-        dir_pin_2.value(1)
-        y_steps = y_steps * (-1)
-#     print(x_steps, y_steps)
     steps(x_steps, y_steps)
 
 def instructor(aquired_tuple):
     instruction_tuple = aquired_tuple
-    #Example tuple to use: instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
     for i in range(len(instruction_tuple)): # loads each item within the instruction tuple and assign to each motor.
         x = int(instruction_tuple[i][0])
         y = int(instruction_tuple[i][1])
-        print("\nstepping to: " + "x:" +  str(x) + ", " + "y:" + str(y))
         steps(x, y)
 
+def position(x = 0, y = 0):
+    global x_last, y_last
+    x_angle = step_angle * x_last
+    y_angle = step_angle * y_last
+    if x != 0 and y != 0:
+        print("Two arguments")
+        print("x at:", x_angle, "\u00B0")
+        print("y at:", y_angle, "\u00B0")
+        return x_angle, y_angle
+    elif x != 0:
+        print("Only X")
+        print("x at:", x_angle, "\u00B0")
+        return x_angle
+    elif y != 0:
+        print("Only Y")
+        print("y at:", y_angle, "\u00B0")
+        return y_angle
+    else:
+        print("No arguments") # Used to get a print in REPL
+        print("x at:", x_angle, "\u00B0")
+        print("y at:", y_angle, "\u00B0")
+    
 if __name__ == "__main__":
     machine.freq(250_000_000)
     print(machine.freq()/1000000, "MHz clock-speed")
     input("\nPress any key to test:\ninstructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))")
     instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
+#     t3 = time.ticks_us()
+#     for i in range(len(instruction_tuple)): # loads each item within the instruction tuple and assign to each motor.
+#         x = int(instruction_tuple[i][0])
+#         y = int(instruction_tuple[i][1])
+#         print("stepping to: " + "x:" +  str(x) + ", " + "y:" + str(y))
+#         steps(x, y)
+#         time.sleep(0.1)
+#     t4 = time.ticks_us()
+#     print(time.ticks_diff(t2, t1))
+#     print(time.ticks_diff(t4, t3))
+

@@ -64,7 +64,7 @@ def step_speed():
     set(y, 31)              # set y to the value 31 (which is 0-31 = 32)
 
     label("delay")          # this is a header we jump back to for adding a delay
-    nop() [19]              # do nothing for [n] instructions (which is 20 instructions)
+    nop() [9]              # do nothing for [n] instructions (which is 20 instructions)
     jmp(y_dec, "delay")     # if y not 0(zero), remove one (-1) from y make jump to delay, Else, continue
     
     irq(clear, 4)           # clear IRQ flag 4, allowing step_counter() to continue 
@@ -162,21 +162,24 @@ def position(x = 0, y = 0):
     x_angle = step_angle * x_last
     y_angle = step_angle * y_last
     if x != 0 and y != 0:
-        print("x at:", x_angle, "\u00B0")
-        print("y at:", y_angle, "\u00B0")
+#         print("x at:", x_angle, "\u00B0")
+#         print("y at:", y_angle, "\u00B0")
         return x_angle, y_angle
     elif x != 0:
-        print("x at:", x_angle, "\u00B0")
+#         print("x at:", x_angle, "\u00B0")
         return x_angle
     elif y != 0:
-        print("y at:", y_angle, "\u00B0")
+#         print("y at:", y_angle, "\u00B0")
         return y_angle
     else:
         print("x at:", x_angle, "\u00B0")
         print("y at:", y_angle, "\u00B0")
-    
+
+def zero():
+    angle(-1 * position (1, 0), -1 * position (0, 1))
+
 if __name__ == "__main__":
     machine.freq(250_000_000)
-    print(machine.freq()/1000000, "MHz clock-speed")
-    input("\nPress any key to test:\ninstructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))")
-    instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
+#     print(machine.freq()/1000000, "MHz clock-speed")
+#     input("\nPress any key to test:\ninstructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))")
+#     instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))

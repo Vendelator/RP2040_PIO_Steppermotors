@@ -1,5 +1,16 @@
 # PIO_Steppermotors
-Uses Micropython to get 4 stepper motors to activate synchronized with each other. Stepper motors are then being run using PIO programs. Motors can be driven using input of steps and angle(deg). It is also possible to read back where the stepper motor is currently at. Motors can run in both direction. Instructions can also be stored in a nested tuple, where the program then executes one tuple at a time, waiting for all PIO programs to finish before executing a new tuple until all tuples have been driven. 
+> Uses Micropython to get up to 4 stepper motors run simultaneously. 
+> This is done using PIO programs. Each program use 2 state machines.
+
+## Functionallity of the program:
+- Drive stepper drivers that takes one Step pin and one Direction pin like a4988, DRV8825 among others.
+- Synchronous activation of 4 PIO programs each running 2 state machines with call-back to main program to make sure they are all completed before they can all simultanoeusly can be activated again. Each program can control 1 stepper motor.
+- Input desired angle for each motor x, y, z and r as ```angle(180, -90, 45, 0) ```. Negative integers are counter clockwise (CCW)
+- Input desired number of steps for each motor x, y, z and r as ```steps(3200, -1200, 123, -313) ```. Negative integers are counter clockwise (CCW)
+- Each movement instruction calls ```position()``` which will print the motors position in degrees.
+- At any point, ```zero()``` will return all motors to their original position.
+- There is also a primitive method of feeding ```steps()``` with nestled tuples using ```instructor()``` which unpacks one
+element at a time and push these to ```steps()```.
 
 
 ## About stepper_controller.py
@@ -17,13 +28,13 @@ Only two PIO programs are currenlty added to the programbut they can be doubled 
 stepper_controller.py is imported into your program as exemplified in main.py where examples on how to call functions are made.
 This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an output gear ratio of 1:1.
 
-This will drive most stepper driver boards that uses a Step pin and Direction Pin. Currently tested with A4988 but more boards on the way.
-
 ## Next release
-- 4 stepper motors.
+- Add 3D models
+- Video of functionality
 
 ## Roadmap (and ideas in no particular order)
-- Create 3 files depending on how many motors that are pre-configured 2, 3 and 4 motors.
+- ~~Finish a working example of running 4 motors.~~
+- Add functionality of programing motors and store them without the need for a computer. Button, Joy-stick, separate .py-file?
 - Look into usin DMA or Array to feed PIO program with instructions to simulate acceleration and retardation? 
 - 3D model stl-files to be used as an example. (Crude models exists already)
 - Add primitive ramp-up / ramp-down functionallity over PIO

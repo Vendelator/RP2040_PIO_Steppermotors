@@ -13,8 +13,8 @@
 - There is also a primitive method of feeding ```steps()``` with nestled tuples using ```instructor()``` which unpacks one
 element at a time and push these to ```steps()```.
 
-![Test setup.](..Images/test_setup.jpeg)
 
+![Test setup.](Images/test_setup.jpg)
 
 
 ## About stepper_controller.py

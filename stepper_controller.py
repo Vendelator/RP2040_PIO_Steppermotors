@@ -96,22 +96,22 @@ def step_speed():
 def pio_0_handler(sm): # Motor 1
     global motor_1
     motor_1 = True
-    print(sm, "x: ", x_last)
+    print(sm, "x:", x_last)
 
 def pio_1_handler(sm): # Motor 2
     global motor_2
     motor_2 = True
-    print(sm, "y: ", y_last)
+    print(sm, "y:", y_last)
 
 def pio_2_handler(sm): # Motor 3
     global motor_3
     motor_3 = True
-    print(sm, "z: ", z_last)
+    print(sm, "z:", z_last)
 
 def pio_3_handler(sm): # Motor 4
     global motor_4
     motor_4 = True
-    print(sm, "r: ", r_last)
+    print(sm, "r:", r_last)
 
      ### Setting up state machines ###
 # Motor 1 is separated in the code to better explain each step.
@@ -137,22 +137,22 @@ sm_1 = rp2.StateMachine(1,           # Creates object called sm_1 and binds it t
 )
 
 # Motor 2 - Pio Block 1
-step_pin_2 = Pin(20, Pin.OUT)                                                  # Step Pin 20
-dir_pin_2 = Pin(21, Pin.OUT)                                                   # Direction Pin 21
+step_pin_2 = Pin(4, Pin.OUT)                                                  # Step Pin 20
+dir_pin_2 = Pin(5, Pin.OUT)                                                   # Direction Pin 21
 sm_4 = rp2.StateMachine(4, step_counter, freq=sc_freq, set_base=step_pin_2) # Statemachine 4 - PIO block 1
 sm_4.irq(pio_1_handler)                                                        #
 sm_5 = rp2.StateMachine(5, step_speed, freq=ss_freq)                        # Statemachine 5 - PIO block 1
 
 # Motor 3 - Pio Block 0
-step_pin_3 = Pin(24, Pin.OUT)                                                  # Step Pin 24
-dir_pin_3 = Pin(25, Pin.OUT)                                                   # Direction Pin 25
+step_pin_3 = Pin(6, Pin.OUT)                                                  # Step Pin 24
+dir_pin_3 = Pin(7, Pin.OUT)                                                   # Direction Pin 25
 sm_2 = rp2.StateMachine(2, step_counter, freq=sc_freq+10, set_base=step_pin_2) # Statemachine 2 - PIO block 0
 sm_2.irq(pio_2_handler)                                                        #
 sm_3 = rp2.StateMachine(3, step_speed, freq=ss_freq+10)                        # Statemachine 3 - PIO block 0
 
 # Motor 4 - Pio Block 1
-step_pin_4 = Pin(28, Pin.OUT)                                                  # Step Pin 28
-dir_pin_4 = Pin(29, Pin.OUT)                                                   # Direction Pin 29
+step_pin_4 = Pin(8, Pin.OUT)                                                  # Step Pin 28
+dir_pin_4 = Pin(9, Pin.OUT)                                                   # Direction Pin 29
 sm_6 = rp2.StateMachine(6, step_counter, freq=sc_freq+10, set_base=step_pin_2) # Statemachine 6 - PIO block 1
 sm_6.irq(pio_3_handler)                                                        #
 sm_7 = rp2.StateMachine(7, step_speed, freq=ss_freq+10)                        # Statemachine 7 - PIO block 1
@@ -174,10 +174,10 @@ def steps(x, y, z, r): # Feeds the PIO programs and activates them.
     motor_2 = False
     motor_3 = False
     motor_4 = False
-    x_steps = x
-    y_steps = y
-    z_steps = z
-    r_steps = r
+    x_steps = round(x)
+    y_steps = round(y)
+    z_steps = round(z)
+    r_steps = round(r)
     if int(x) < 0:
         dir_pin_1.value(1)
         x_steps = x_steps * (-1)
@@ -207,6 +207,13 @@ def steps(x, y, z, r): # Feeds the PIO programs and activates them.
             position()
             return
         time.sleep_ms(1)
+
+# def steps(x, y, z, r):
+#     x_steps = int(x)
+#     y_steps = int(y)
+#     z_steps = int(z)
+#     r_steps = int(r)
+#     steps(x_steps, y_steps, z_steps, r_steps)
 
 def angle(x_deg, y_deg, z_deg, r_deg):
     global step_angle

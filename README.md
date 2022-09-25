@@ -13,6 +13,18 @@
 - There is also a primitive method of feeding ```steps()``` with nestled tuples using ```instructor()``` which unpacks one
 element at a time and push these to ```steps()```.
 
+![Test setup.](/RP2040_PIO_Steppermotors/Images/test_setup.jpeg)
+
+/RP2040_PIO_Steppermotors/Images/test_setup.jpeg
+
+![Test setup.](/Images/test_setup.jpeg)
+
+/assets/Images/test_setup.jpeg
+
+![Test setup.](https://github.com/Vendelator/RP2040_PIO_Steppermotors/blob/main/Images/test_setup.jpeg
+)
+
+https://github.com/Vendelator/RP2040_PIO_Steppermotors/blob/main/Images/test_setup.jpeg
 
 ## About stepper_controller.py
 Stepper_controller.py requires manual input of desired pins to use, gear ratio of stepper motor etc and transforms into actual steps on 

@@ -10,14 +10,27 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 
          ### Stepper motor setup ###
-drv_ms = 16 # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 132
-motor_steps_per_rev = 200 # Steps per full revolution
-gear_ratio = 1 # This is how many times the motor needs to spin to turn output one time 
-steps_per_rev = motor_steps_per_rev * drv_ms * gear_ratio # This is steps for one full rotation of output
+# These settings are made for rotational movement only. (Belts, gears etc)
+# This means if you want to use a trapetziod for a linear actuator, use the other motor settings.
+drv_ms = 16               # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 128, write the denominator only
+motor_steps_per_rev = 200 # steps per full revolution, often 200 or 400
+gear_ratio = 1            # how many times the motor needs to spin to turn output one time. Gear ratio 5:1 means 5 times for one full turn
+steps_per_rev = motor_steps_per_rev * drv_ms * gear_ratio # This is the number of steps to move output.
 step_angle = 360 / steps_per_rev # This is the step resolution in degrees
+lead_screw_pitch = 2 # This is how far each rotation will move something. 2 [mm] pitch is common for 3D printers.
+step_pitch = lead_screw_pitch / steps_per_rev # This is how far along the lead screw we are moved for each step.
 print("Steps per revolution:", steps_per_rev, "steps.",
-      "\nOne step is", step_angle, "degrees"
-)
+      "\nOne step is", step_angle, "degrees")
+print ("[mm] per revolution:", lead_screw_pitch,
+       "\nOne steps is", step_pitch, "[mm]")
+
+# Whith the example above, we get:
+# Belt, Gear or Arm 
+# Steps per revolution: 3200
+# Lead screw
+# [mm] per revolution: 2
+# One step is 0.1125 degrees
+
 
          ### Synchronization Pin ###
 activation_pin = Pin(25, Pin.OUT) # Pin 25 is used to trigger our PIO programs/functions

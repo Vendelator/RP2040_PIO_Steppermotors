@@ -37,7 +37,7 @@ This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an outpu
 - Video of functionality Soon!
 
 ## Known bugs...
-- using angle() makes the motors turn faster than step() even though ```angle()``` actually calls ```step()``` after being called. This is logically reversed but probably due to how numbers are stored. Will investigate. In fact, angle() is the longest route the code can traverse. At further investigation, it seems to be related to wheter or not the Direction pins are activated for one of the motors.
+- ~~using angle() makes the motors turn faster than step() even though ```angle()``` actually calls ```step()``` after being called. This is logically reversed but probably due to how numbers are stored. Will investigate. In fact, angle() is the longest route the code can traverse. At further investigation, it seems to be related to wheter or not the Direction pins are activated for one of the motors.~~ - Fxed
 
 ## Roadmap (and ideas in no particular order)
 - ~~Finish a working example of running 4 motors.~~

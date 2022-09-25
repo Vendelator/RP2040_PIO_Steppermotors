@@ -33,6 +33,9 @@ This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an outpu
 - ~~Add 3D models~~ Done!
 - Video of functionality Soon!
 
+## Known bugs...
+- using angle() makes the motors turn faster than step() even though ```angle()``` actually calls ```step()``` after being called. This is logically reversed but probably due to how numbers are stored. Will investigate.
+
 ## Roadmap (and ideas in no particular order)
 - ~~Finish a working example of running 4 motors.~~
 - Add functionality of programing motors and store them without the need for a computer. Button, Joy-stick, separate .py-file?

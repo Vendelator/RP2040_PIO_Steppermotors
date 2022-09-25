@@ -5,6 +5,7 @@
 ## Functionallity of the program:
 - Drive stepper drivers that takes one Step pin and one Direction pin like a4988, DRV8825 among others.
 - Synchronous activation of 4 PIO programs each running 2 state machines with call-back to main program to make sure they are all completed before they can all simultanoeusly can be activated again. Each program can control 1 stepper motor.
+- Motors will move like MOVJ (joint movement) which means they will travel their steps as fast as possible and then wait for the other motors.
 - Input desired angle for each motor x, y, z and r as ```angle(180, -90, 45, 0) ```. Negative integers are counter clockwise (CCW)
 - Input desired number of steps for each motor x, y, z and r as ```steps(3200, -1200, 123, -313) ```. Negative integers are counter clockwise (CCW)
 - Each movement instruction calls ```position()``` which will print the motors position in degrees.

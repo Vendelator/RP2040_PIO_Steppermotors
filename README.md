@@ -30,8 +30,8 @@ stepper_controller.py is imported into your program as exemplified in main.py wh
 This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an output gear ratio of 1:1.
 
 ## Next release
-- Add 3D models
-- Video of functionality
+- ~~Add 3D models~~ Done!
+- Video of functionality Soon!
 
 ## Roadmap (and ideas in no particular order)
 - ~~Finish a working example of running 4 motors.~~

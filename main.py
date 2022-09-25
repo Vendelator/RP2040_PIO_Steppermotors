@@ -48,10 +48,11 @@ import stepper_controller as ctrl
 
 #TEST
 if __name__ == "__main__":
+#     pass
     machine.freq(250_000_000) # Setch CPU frequency to 250 MHz
-    input("\nPress enter to perform test")
-    ctrl.angle(90, -90, 180, -180) # Moves X 90 Deg CW and Y -90 DEG CCW
-    ctrl.steps(-1600, 1600, 200, 400) # Moves X 1600 steps CCW and Y 1600 steps CW
-    ctrl.instructor(((200, 400, -400, 800), (800, -200, 800, -800)))
-    input("Press enter to return to zero")
-    ctrl.zero() # Checks how many steps from start and rotates back.
+#     input("\nPress enter to perform test")
+#     ctrl.angle(90, -90, 180, -180) # Moves X 90 Deg CW and Y -90 DEG CCW
+#     ctrl.steps(-1600, 1600, 200, 400) # Moves X 1600 steps CCW and Y 1600 steps CW
+#     ctrl.instructor(((200, 400, -400, 800), (800, -200, 800, -800)))
+#     input("Press enter to return to zero")
+#     ctrl.zero() # Checks how many steps from start and rotates back.

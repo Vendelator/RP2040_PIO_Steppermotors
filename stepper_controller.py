@@ -221,7 +221,9 @@ def instructor(aquired_tuple):
     for i in range(len(instruction_tuple)): # loads each item within the instruction tuple and assign to each motor.
         x = int(instruction_tuple[i][0])
         y = int(instruction_tuple[i][1])
-        steps(x, y)
+        z = int(instruction_tuple[i][2])
+        r = int(instruction_tuple[i][3])
+        steps(x, y, z, r)
 
 def position(x = 0, y = 0, z=0, r=0):
     global x_last, y_last, z_last, r_last
@@ -243,10 +245,10 @@ def position(x = 0, y = 0, z=0, r=0):
         return y_angle
     elif z != 0:
 #         print("z at:", z_angle, "\u00B0")
-        return y_angle
+        return z_angle
     elif r != 0:
 #         print("r at:", r_angle, "\u00B0")
-        return y_angle
+        return r_angle
     else:
         print("x at:", x_angle, "\u00B0")
         print("y at:", y_angle, "\u00B0")
@@ -258,6 +260,6 @@ def zero():
 
 if __name__ == "__main__":
     machine.freq(250_000_000)
-#     print(machine.freq()/1000000, "MHz clock-speed")
-#     input("\nPress any key to test:\ninstructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))")
-#     instructor(((200, 400), (-400, 800), (800, 1600), (-1600, 3200), (3200, 6400)))
+    print(machine.freq()/1000000, "MHz clock-speed")
+    input("\nPress any key to test:\ninstructor()")
+    instructor(((200, 400, -400, 800), (800, -200, 800, -800)))

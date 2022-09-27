@@ -3,7 +3,7 @@ import time                      # To be able to add delays (sleep)
 from machine import Pin          # To allow software to manipulate board pins
 import rp2                       # Is used to make PIO programs
 
-         ### Variables ###
+         ### Global Variables ###
 motor_1 = False                   # To be able to check if a motor is completed
 motor_2 = False                   # - " -
 motor_3 = False
@@ -12,6 +12,10 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
+# x_speed = 10                      # Speed of motor to put into PIO.
+# y_speed = 10                      # - " -
+# z_speed = 10                      # - " -
+# r_speed = 10                      # - " -
 
          ### Stepper motor setup ###
 # These settings are made for rotational movement only. (Belts, gears etc)
@@ -56,37 +60,29 @@ activation_pin = Pin(25, Pin.OUT) # Pin 25 is used to trigger our PIO programs/f
 #           -- PIO block 0 --           -- PIO block 1 --
 #        State machine 0, 1, 2, 3    State machine 4, 5, 6, 7
 
-@rp2.asm_pio(set_init=rp2.PIO.OUT_LOW) # Tells the program that this is a PIO program/function.
-                                       # and that it's assigned Pin should be Low / Off 
-                                       # when the program starts.
+@rp2.asm_pio(sideset_init=rp2.PIO.OUT_LOW) # Assembly decorator, sideset pin default Low
+                                           # and that it's assigned Pin should be Low / Off 
+                                           # when the program starts.
 def step_counter():
-    pull(block)             # wait for FIFO to fill (put), then pull data to OSR
-    mov(x, osr)             # copy OSR data into X (load our steps into x)
-    
-    wait(1, gpio, 25)       # waiting for Pin 25 to activate
+    pull(block)                    # wait for FIFO to fill (put), then pull data to OSR
+    mov(x, osr)                    # copy OSR data into X (load our steps into x)
+    wait(1, gpio, 25)              # waiting for Pin 25 to activate
+    label("count")                 # this is a header we jump back to for counting steps
+    jmp(not_x, "end") .side(1) [1] # if x is 0(zero), jmp to end - Side Step Pin On
+    irq(5) .side(0)                # sets IRQ 5 high, starting step_speed() - Side Step Pin Off
+    irq(block, 4)                  # waiting for IRQ flag 4 to clear
+    jmp(x_dec, "count")            # if x is NOT 0(zero), remove one (-1) from x and jump back to count, Else, continue
+    label("end")                   # This is a header we can jmp to if x is 0.
+    irq(block, rel(0))             # Signals IRQ handler that all steps have been made and waits for handler to clear the flag (block)
 
-    label("count")          # this is a header we jump back to for counting steps
-    jmp(not_x, "end")       # if x is 0(zero), jmp to end
-    set(pins, 1)            # sets Step pin high and waits for n us IF STALLING, add [1] - [10]
-    set(pins, 0)            # sets Step pin low again
-    irq(5)                  # sets IRQ 5 high, starting step_speed()
-    irq(block, 4)           # waiting for IRQ flag 4 to clear
-    jmp(x_dec, "count")     # if x is NOT 0(zero), remove one (-1) from x and jump back to count, Else, continue
-
-    label("end")            # This is a header we can jmp to if x is 0.
-    irq(block, rel(0))      # Signals IRQ handler that all steps have been made and waits for handler to clear the flag (block)
-
-@rp2.asm_pio()                         # Tells the program that this is a PIO program/function.
-                                       # Does nothing extra
+@rp2.asm_pio(autopull=True)                         # Tells the program that this is a PIO program/function.
 def step_speed():
     wait(1, irq, 5)         # waiting for IRQ flag 5 from step_counter and then clears it
-    set(y, 31)              # set y to the value 31 (which is 0-31 = 32)
-
+    set(y, 5)               # set y to the value 31 (which is 0-31 = 32)
     label("delay")          # this is a header we jump back to for adding a delay
-    nop() [9]              # do nothing for [n] instructions (which is 20 instructions)
+    nop() [9]               # do nothing for [n] instructions (which is 20 instructions)
     jmp(y_dec, "delay")     # if y not 0(zero), remove one (-1) from y make jump to delay, Else, continue
-    
-    irq(clear, 4)           # clear IRQ flag 4, allowing step_counter() to continue 
+    irq(clear, 4)           # clear IRQ flag 4, allowing step_counter() to continue
 
      ### PIO interupt handlers ###
 # These are triggered by step_counter in each PIO block and thus
@@ -117,7 +113,7 @@ def pio_3_handler(sm): # Motor 4
 # Motor 1 is separated in the code to better explain each step.
 # Motor 2 uses the same code, but is written in a much more readable way.
 # Motor 2 is the prefered way to write code.
-sc_freq = 4_000_000 # step_counter frequency
+sc_freq = 1_000_000 # step_counter frequency
 ss_freq = 1_000_000 # step_speed frequency
                     # 1_000_000 Hz = 1 MHz means each instruction in PIO is 1us long
                     # 4_000_000 Hz = 4 MHz means each instruction in PIO is 0.25 us long
@@ -127,7 +123,7 @@ dir_pin_1 = Pin(16, Pin.OUT)         # Defines Pin 16 as direction pin of motor 
 sm_0 = rp2.StateMachine(0,           # Creates object called sm_0 and binds it to state machine 0 inPIO block 0
     step_counter,                    # Assigns step_counter as PIO program/function
     freq=sc_freq,                    # Sets the PIO frequency to sc_freq
-    set_base=step_pin_1                 # Sets Pin 17 as first output pin of PIO program/function
+    sideset_base=step_pin_1          # Sets Pin 17 as first sideset pin of PIO program/function
 )
 
 sm_0.irq(pio_0_handler)              # Directs interrupts from sm_0 to the interrupt handler pio_0_handler()
@@ -137,23 +133,23 @@ sm_1 = rp2.StateMachine(1,           # Creates object called sm_1 and binds it t
 )
 
 # Motor 2 - Pio Block 1
-step_pin_2 = Pin(4, Pin.OUT)                                                  # Step Pin 20
-dir_pin_2 = Pin(5, Pin.OUT)                                                   # Direction Pin 21
-sm_4 = rp2.StateMachine(4, step_counter, freq=sc_freq, set_base=step_pin_2) # Statemachine 4 - PIO block 1
+step_pin_2 = Pin(4, Pin.OUT)                                                  # Step Pin 4
+dir_pin_2 = Pin(5, Pin.OUT)                                                   # Direction Pin 5
+sm_4 = rp2.StateMachine(4, step_counter, freq=sc_freq, sideset_base=step_pin_2) # Statemachine 4 - PIO block 1
 sm_4.irq(pio_1_handler)                                                        #
 sm_5 = rp2.StateMachine(5, step_speed, freq=ss_freq)                        # Statemachine 5 - PIO block 1
 
 # Motor 3 - Pio Block 0
-step_pin_3 = Pin(6, Pin.OUT)                                                  # Step Pin 24
-dir_pin_3 = Pin(7, Pin.OUT)                                                   # Direction Pin 25
-sm_2 = rp2.StateMachine(2, step_counter, freq=sc_freq+10, set_base=step_pin_2) # Statemachine 2 - PIO block 0
+step_pin_3 = Pin(6, Pin.OUT)                                                  # Step Pin 5
+dir_pin_3 = Pin(7, Pin.OUT)                                                   # Direction Pin 6
+sm_2 = rp2.StateMachine(2, step_counter, freq=sc_freq+10, sideset_base=step_pin_2) # Statemachine 2 - PIO block 0
 sm_2.irq(pio_2_handler)                                                        #
 sm_3 = rp2.StateMachine(3, step_speed, freq=ss_freq+10)                        # Statemachine 3 - PIO block 0
 
 # Motor 4 - Pio Block 1
-step_pin_4 = Pin(8, Pin.OUT)                                                  # Step Pin 28
-dir_pin_4 = Pin(9, Pin.OUT)                                                   # Direction Pin 29
-sm_6 = rp2.StateMachine(6, step_counter, freq=sc_freq+10, set_base=step_pin_2) # Statemachine 6 - PIO block 1
+step_pin_4 = Pin(8, Pin.OUT)                                                  # Step Pin 8
+dir_pin_4 = Pin(9, Pin.OUT)                                                   # Direction Pin 9
+sm_6 = rp2.StateMachine(6, step_counter, freq=sc_freq+10, sideset_base=step_pin_2) # Statemachine 6 - PIO block 1
 sm_6.irq(pio_3_handler)                                                        #
 sm_7 = rp2.StateMachine(7, step_speed, freq=ss_freq+10)                        # Statemachine 7 - PIO block 1
 
@@ -194,6 +190,10 @@ def steps(x, y, z, r): # Feeds the PIO programs and activates them.
     sm_4.put(y_steps)
     sm_2.put(z_steps)
     sm_6.put(r_steps)
+#     sm_1.put(x_speed)
+#     sm_5.put(y_speed)
+#     sm_3.put(z_speed)
+#     sm_7.put(r_speed)
     activation_pin.value(1)
     print("\n### Stepping the steps ###")
     print("\nstepping to: " + "\nx:" +  str(x_last) + "\ny:" + str(y_last), "\nz:" +  str(z_last) + "\nr:" + str(r_last))
@@ -264,6 +264,19 @@ def position(x = 0, y = 0, z=0, r=0):
 
 def zero():
     angle(-1 * position (1, 0, 0, 0), -1 * position (0, 1, 0, 0), -1 * position (0, 0, 1, 0), -1 * position (0, 0, 0, 1))
+
+# def motor_speed(x, y, z, r):
+#     global x_speed, y_speed, z_speed, r_speed
+#     min_limit = 5
+#     max_limit = 1000
+#     if min_limit <= x <= max_limit:
+#         x_speed = x
+#     if min_limit <= y <= max_limit:
+#         y_speed = y
+#     if min_limit <= z <= max_limit:
+#         z_speed = z
+#     if min_limit <= r <= max_limit:
+#         r_speed = r
 
 if __name__ == "__main__":
     machine.freq(250_000_000)

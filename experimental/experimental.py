@@ -12,7 +12,7 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
-base_delay = 100
+base_delay = 200
 
          ### Stepper motor setup ###
 # These settings are made for rotational movement only. (Belts, gears etc)
@@ -111,8 +111,8 @@ def pio_3_handler(sm): # Motor 4
     print(sm, "r:", r_last)
 
      ### Setting up state machines ###
-sc_freq = 1_000_000 # step_counter frequency
-ss_freq = 1_000_000 # step_speed frequency
+sc_freq = 10_000_000 # step_counter frequency
+ss_freq = 10_000_000 # step_speed frequency
 
 # Motor 1 - Pio Block 0
 step_pin_1 = Pin(17, Pin.OUT)
@@ -319,7 +319,7 @@ def motor_sync(x, y, z, r):
     return (x_delay, y_delay, z_delay, r_delay)
 
 if __name__ == "__main__":
-    machine.freq(200_000_000)
+    machine.freq(250_000_000)
     print(machine.freq()/1000000, "MHz clock-speed")
 #     input("\nPress any key to test:\nstep_instructor()")
 #     step_instructor(((200, 400, -400, 800), (800, -200, 800, -800)))

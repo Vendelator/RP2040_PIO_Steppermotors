@@ -6,26 +6,27 @@ from rp2 import PIO, StateMachine, asm_pio  # Is used to make PIO programs
          ### Global Variables ###
 motor_1 = False                   # To be able to check if a motor is completed
 motor_2 = False                   # - " -
-motor_3 = False
-motor_4 = False
+motor_3 = False                   # - " -
+motor_4 = False                   # - " -
 x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
-base_delay = 200
+base_delay = 200                  # Sets the motor speed based on a Loop in a PIO routine.
+
 
          ### Stepper motor setup ###
 # These settings are made for rotational movement only. (Belts, gears etc)
 # This means if you want to use a trapetziod for a linear actuator, use the other motor settings.
 drv_ms = 16               # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 128, write the denominator only
-motor_steps_per_rev = 200 # steps per full revolution, often 200 or 400
-gear_ratio = 1            # how many times the motor needs to spin to turn output one time. Gear ratio 5:1 means 5 times for one full turn
-steps_per_rev = motor_steps_per_rev * drv_ms * gear_ratio # This is the number of steps to move output.
-step_angle = 360 / steps_per_rev # This is the step resolution in degrees
+mtr_steps_rev = 200 # steps per full revolution, often 200 or 400
+gear_ratio = 1            # This is the total gear ration. Gear ratio 5:1 means you write 5
+steps_rev = mtr_steps_rev * drv_ms * gear_ratio # This is the number of steps to move output.
+step_angle = 360 / steps_rev # This is the step resolution in degrees
 lead_screw_pitch = 2 # This is how far each rotation will move something. 2 [mm] pitch is common for 3D printers.
-step_pitch = lead_screw_pitch / steps_per_rev # This is how far along the lead screw we are moved for each step.
+step_pitch = lead_screw_pitch / steps_rev # This is how far along the lead screw we are moved for each step.
 print("For gears, belts and arms.")
-print("Steps per revolution:", steps_per_rev, "steps.",
+print("Steps per revolution:", steps_rev, "steps.",
       "\nOne step is", step_angle, "degrees.\n")
 print("For lead screws.")
 print ("[mm] per revolution:", lead_screw_pitch,
@@ -63,7 +64,7 @@ activation_pin = Pin(25, Pin.OUT) # Pin 25 is used to trigger our PIO programs/f
 def step_counter():
     pull(block)                    # wait for FIFO to fill (put), then pull data to OSR
     mov(x, osr)                    # copy OSR data into X (load our steps into x)
-    wait(1, gpio, 25)              # waiting for Pin 25 to activate
+    wait(1, gpio, 25)              # waiting for "activation_pin.value(1)"
     label("count")                 # this is a header we jump back to for counting steps
     jmp(not_x, "end") .side(1) [1] # if x is 0(zero), jmp to end - Side Step Pin On
     irq(5) .side(0)                # sets IRQ 5 high, starting step_speed() - Side Step Pin Off
@@ -74,14 +75,14 @@ def step_counter():
 
 @asm_pio()                         # Tells the program that this is a PIO program/function.
 def step_speed():
-    pull(noblock)
-    mov(x, osr)
-    mov(y, x)
-    wait(1, irq, 5)         # waiting for IRQ flag 5 from step_counter and then clears it
-    label("delay")          # this is a header we jump back to for adding a delay
-    jmp(x_dec, "delay")     # if y not 0(zero), remove one (-1) from y make jump to delay, Else, continue
-    irq(clear, 4)           # clear IRQ flag 4, allowing step_counter() to continue
-    mov(x, y)
+    pull(noblock)           # Pulls delay value into PIO routine (OSR)
+    mov(x, osr)             # Copies OSR value into X
+    mov(y, x)               # Makes a copy of X into Y 
+    wait(1, irq, 5)         # Waiting for IRQ flag 5 from step_counter and then clears it
+    label("delay")          # This is a header we jump back to for adding a delay
+    jmp(x_dec, "delay")     # If y not 0(zero), remove one (-1) from y make jump to delay, Else, continue
+    irq(clear, 4)           # Clear IRQ flag 4, allowing step_counter() to continue
+    mov(x, y)               # Refills x with y
 #     mov(osr, y)
 
 
@@ -166,10 +167,6 @@ def runner(x, y, z, r): # Feeds the PIO programs and activates them.
     y_last = y + y_last
     z_last = z + z_last
     r_last = r + r_last
-    motor_1 = False
-    motor_2 = False
-    motor_3 = False
-    motor_4 = False
     x_steps = round(x)
     y_steps = round(y)
     z_steps = round(z)
@@ -192,45 +189,43 @@ def runner(x, y, z, r): # Feeds the PIO programs and activates them.
     print(round(base_delay / delay_adjustment[1], 2))
     print(round(base_delay / delay_adjustment[2], 2))
     print(round(base_delay / delay_adjustment[3], 2))
-    sm_1.exec("mov(osr, null)")
-    sm_1.put(round(base_delay / delay_adjustment[0]), 2)
-#     sm_1.exec("mov(isr, osr)")
-    sm_5.exec("mov(osr, null)")
-    sm_5.put(round(base_delay / delay_adjustment[1]), 2)
-#     sm_5.exec("mov(isr, osr)")
-    sm_3.exec("mov(osr, null)")
-    sm_3.put(round(base_delay / delay_adjustment[2]), 2)
-#     sm_3.exec("mov(isr, osr)")
-    sm_7.exec("mov(osr, null)")
-    sm_7.put(round(base_delay / delay_adjustment[3]), 2)
-#     sm_7.exec("mov(isr, osr)")
-    sm_0.put(x_steps)
-    sm_4.put(y_steps)
-    sm_2.put(z_steps)
-    sm_6.put(r_steps)
-    sleep(0.5)
-    activation_pin.value(1)
-    print("\n### Stepping the steps ###")
-    print("\nstepping to: " + "\nx:" +  str(x_last) + "\ny:" + str(y_last), "\nz:" +  str(z_last) + "\nr:" + str(r_last))
+    
+    # Clear sm_1 so that only new values exists as delays
+    sm_1.exec("mov(osr, null)"), sm_1.exec("mov(x, null)"), sm_1.exec("mov(y, null)") # Clear statemachine sm_1
+    sm_1.put(round(base_delay / delay_adjustment[0]), 2)                              # Add new delay value
+    sm_5.exec("mov(osr, null)"), sm_5.exec("mov(x, null)"), sm_5.exec("mov(y, null)") # Clear statemachine sm_5
+    sm_5.put(round(base_delay / delay_adjustment[1]), 2)                              # Add new delay value
+    sm_3.exec("mov(osr, null)"), sm_3.exec("mov(x, null)"), sm_3.exec("mov(y, null)") # Clear statemachine sm_3
+    sm_3.put(round(base_delay / delay_adjustment[2]), 2)                              # Add new delay value
+    sm_7.exec("mov(osr, null)"), sm_7.exec("mov(x, null)"), sm_7.exec("mov(y, null)") # Clear statemachine sm_7
+    sm_7.put(round(base_delay / delay_adjustment[3]), 2)                              # Add new delay value
+    
+    sm_0.put(x_steps)                                                                 # Add new n steps to sm_0
+    sm_4.put(y_steps)                                                                 # Add new n steps to sm_4
+    sm_2.put(z_steps)                                                                 # Add new n steps to sm_2
+    sm_6.put(r_steps)                                                                 # Add new n steps to sm_6
+    
+    sleep(0.5)                                                                        # Short delay to make sure all state machines
+                                                                                      # have recieved their values
+    activation_pin.value(1)                                                           # Start running motors.
+    print("\n### Stepping the steps... ###")
+    print("\nSteps from origin: " + "\nx:" +  str(x_last) + "\ny:" + str(y_last), "\nz:" +  str(z_last) + "\nr:" + str(r_last), "\n")
     while True:
         if motor_1 and motor_2 and motor_3 and motor_4:
             dir_pin_1.value(0)
             dir_pin_2.value(0)
             dir_pin_3.value(0)
             dir_pin_4.value(0)
+            motor_1 = False
+            motor_2 = False
+            motor_3 = False
+            motor_4 = False
             activation_pin.value(0) # This is active until both processes have signaled that they are done.
             position()
             return
         sleep(0.2)
 
-# def runner(x, y, z, r):
-#     x_steps = int(x)
-#     y_steps = int(y)
-#     z_steps = int(z)
-#     r_steps = int(r)
-#     runner(x_steps, y_steps, z_steps, r_steps)
-
-def step(x_steps, y_steps, z_steps, r_steps):
+def steps(x_steps, y_steps, z_steps, r_steps):
     runner(x_steps, y_steps, z_steps, r_steps)
 
 def angle(x_deg, y_deg, z_deg, r_deg):

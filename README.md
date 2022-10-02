@@ -36,6 +36,9 @@ This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an outpu
 - ~~Add 3D models~~ Done!
 - Video of functionality Soon!
 
+## In experimental
+- Changing delays in second PIO routine to synchronize when motors stop. This will allow for MOVL instead of MOVJ, meaning that in the x,y,z space, the end effector will move in a straight vector to its new coordinates. T
+
 ## Known bugs...
 - ~~using angle() makes the motors turn faster than step() even though ```angle()``` actually calls ```step()``` after being called. This is logically reversed but probably due to how numbers are stored. Will investigate. In fact, angle() is the longest route the code can traverse. At further investigation, it seems to be related to wheter or not the Direction pins are activated for one of the motors.~~ - Fxed
 
@@ -47,3 +50,4 @@ This "demo" Assumes 200 steps per revolution at 1/16 microstepping with an outpu
 - Add primitive ramp-up / ramp-down functionallity over PIO
 - Add alternative method that works for both Pico and Pico W. It's important to get the visual feedback.
 - Using UART to daisy-chain several Pi Picos to be able to have even more motors activate simultanously, still all activating simultanously.
+- Adding basic inverse kinematics based entirely on the math module. Main program should call a function to get relevant angles and feed these using the new angle_instructor() as tuples for several motions in a row for making tasks.

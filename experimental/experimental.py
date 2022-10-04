@@ -12,13 +12,13 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
-base_delay = 200                  # Sets the motor speed based on a Loop in a PIO routine.
+base_delay = 150                  # Sets the motor speed based on a Loop in a PIO routine.
 
 
          ### Stepper motor setup ###
 # These settings are made for rotational movement only. (Belts, gears etc)
 # This means if you want to use a trapetziod for a linear actuator, use the other motor settings.
-drv_ms = 16               # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 128, write the denominator only
+drv_ms = 32               # resolution of microstepping 1 / 1, 2, 4, 8, 16, 32, 64, 128, write the denominator only
 mtr_steps_rev = 200 # steps per full revolution, often 200 or 400
 gear_ratio = 1            # This is the total gear ration. Gear ratio 5:1 means you write 5
 steps_rev = mtr_steps_rev * drv_ms * gear_ratio # This is the number of steps to move output.
@@ -131,8 +131,8 @@ sm_1 = StateMachine(1,           # Creates object called sm_1 and binds it to st
 )
 
 # Motor 2 - Pio Block 1
-step_pin_2 = Pin(4, Pin.OUT)                                                  # Step Pin 4
-dir_pin_2 = Pin(5, Pin.OUT)                                                   # Direction Pin 5
+step_pin_2 = Pin(14, Pin.OUT)                                                  # Step Pin 4
+dir_pin_2 = Pin(15, Pin.OUT)                                                   # Direction Pin 5
 sm_4 = StateMachine(4, step_counter, freq=sc_freq, sideset_base=step_pin_2) # Statemachine 4 - PIO block 1
 sm_4.irq(pio_1_handler)                                                        #
 sm_5 = StateMachine(5, step_speed, freq=ss_freq)                        # Statemachine 5 - PIO block 1

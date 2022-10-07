@@ -12,7 +12,7 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
-base_delay = 150                  # Sets the motor speed based on a Loop in a PIO routine.
+base_delay = 500                  # Sets the motor speed based on a Loop in a PIO routine.
 
 
          ### Stepper motor setup ###
@@ -185,20 +185,16 @@ def runner(x, y, z, r): # Feeds the PIO programs and activates them.
         r_steps = r_steps * (-1)
     delay_adjustment = motor_sync(x, y, z, r)
     print(delay_adjustment)
-    print(base_delay / delay_adjustment[0])
-    print(round(base_delay / delay_adjustment[1], 2))
-    print(round(base_delay / delay_adjustment[2], 2))
-    print(round(base_delay / delay_adjustment[3], 2))
-    
+
     # Clear sm_1 so that only new values exists as delays
     sm_1.exec("mov(osr, null)"), sm_1.exec("mov(x, null)"), sm_1.exec("mov(y, null)") # Clear statemachine sm_1
-    sm_1.put(round(base_delay / delay_adjustment[0]), 2)                              # Add new delay value
+    sm_1.put(delay_adjustment[0]*1)                              # Add new delay value
     sm_5.exec("mov(osr, null)"), sm_5.exec("mov(x, null)"), sm_5.exec("mov(y, null)") # Clear statemachine sm_5
-    sm_5.put(round(base_delay / delay_adjustment[1]), 2)                              # Add new delay value
+    sm_5.put(delay_adjustment[1]*1)                              # Add new delay value
     sm_3.exec("mov(osr, null)"), sm_3.exec("mov(x, null)"), sm_3.exec("mov(y, null)") # Clear statemachine sm_3
-    sm_3.put(round(base_delay / delay_adjustment[2]), 2)                              # Add new delay value
+    sm_3.put(delay_adjustment[2]*1)                              # Add new delay value
     sm_7.exec("mov(osr, null)"), sm_7.exec("mov(x, null)"), sm_7.exec("mov(y, null)") # Clear statemachine sm_7
-    sm_7.put(round(base_delay / delay_adjustment[3]), 2)                              # Add new delay value
+    sm_7.put(delay_adjustment[3]*1)                              # Add new delay value
     
     sm_0.put(x_steps)                                                                 # Add new n steps to sm_0
     sm_4.put(y_steps)                                                                 # Add new n steps to sm_4
@@ -288,33 +284,55 @@ def zero():
     angle(-1 * position (1, 0, 0, 0), -1 * position (0, 1, 0, 0), -1 * position (0, 0, 1, 0), -1 * position (0, 0, 0, 1))
 
 def motor_sync(x, y, z, r):
+    global base_delay
     tupl = (abs(x), abs(y), abs(z), abs(r))
     highest_count = max(tupl)
-    
     if tupl[0] > 0:
         x_delay = tupl[0] / highest_count
     else:
         x_delay = 1
-        
     if tupl[1] > 0:
         y_delay = tupl[1] / highest_count
     else:
         y_delay = 1
-        
     if tupl[2] > 0:
         z_delay = tupl[2] / highest_count
     else:
         z_delay = 1
-        
     if tupl[3] > 0:
         r_delay = tupl[3] / highest_count
     else:
         r_delay = 1
-        
-    return (x_delay, y_delay, z_delay, r_delay)
+    
+    print(x_delay, y_delay, z_delay, r_delay)
+    
+    if x_delay != 1:
+        x_delay = -(-base_delay // x_delay)*2 + 25
+    else:
+        x_delay = base_delay
+    
+    if y_delay != 1:
+        y_delay = -(-base_delay // y_delay)*2 + 25
+    else:
+        y_delay = base_delay
+    
+    if z_delay != 1:
+        z_delay = -(-base_delay // z_delay)*2 + 25
+    else:
+        z_delay = base_delay
+    
+    if r_delay != 1:
+        r_delay = -(-base_delay // r_delay)*2 + 25
+    else:
+        r_delay = base_delay
+    
+    print(x_delay, y_delay, z_delay, r_delay)
+    
+    return (round(x_delay), round(y_delay), round(z_delay), round(r_delay))
 
 if __name__ == "__main__":
     machine.freq(250_000_000)
     print(machine.freq()/1000000, "MHz clock-speed")
 #     input("\nPress any key to test:\nstep_instructor()")
 #     step_instructor(((200, 400, -400, 800), (800, -200, 800, -800)))
+

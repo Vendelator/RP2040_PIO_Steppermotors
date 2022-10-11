@@ -12,7 +12,8 @@ x_last = 0                        # To store relative position in steps
 y_last = 0                        # - " -
 z_last = 0                        # - " -
 r_last = 0                        # - " -
-base_delay = 500                  # Sets the motor speed based on a Loop in a PIO routine.
+base_delay = 200                  # Sets the motor speed based on a Loop in a PIO routine.
+
 
 
          ### Stepper motor setup ###
@@ -62,13 +63,13 @@ activation_pin = Pin(25, Pin.OUT) # Pin 25 is used to trigger our PIO programs/f
                                            # and that it's assigned Pin should be Low / Off 
                                            # when the program starts.
 def step_counter():
-    pull(block)                    # wait for FIFO to fill (put), then pull data to OSR
+    pull()                         # wait for FIFO to fill (put), then pull data to OSR
     mov(x, osr)                    # copy OSR data into X (load our steps into x)
     wait(1, gpio, 25)              # waiting for "activation_pin.value(1)"
     label("count")                 # this is a header we jump back to for counting steps
-    jmp(not_x, "end") .side(1) [1] # if x is 0(zero), jmp to end - Side Step Pin On
-    irq(5) .side(0)                # sets IRQ 5 high, starting step_speed() - Side Step Pin Off
-    irq(block, 4)                  # waiting for IRQ flag 4 to clear
+    jmp(not_x, "end")              # if x is 0(zero), jmp to end - Side Step Pin On
+    irq(5) .side(1) [1]            # sets IRQ 5 high, starting step_speed() - Side Step Pin Off
+    irq(block, 4) .side(0)         # waiting for IRQ flag 4 to clear
     jmp(x_dec, "count")            # if x is NOT 0(zero), remove one (-1) from x and jump back to count, Else, continue
     label("end")                   # This is a header we can jmp to if x is 0.
     irq(block, rel(0))             # Signals IRQ handler that all steps have been made and waits for handler to clear the flag (block)
@@ -83,7 +84,7 @@ def step_speed():
     jmp(x_dec, "delay")     # If y not 0(zero), remove one (-1) from y make jump to delay, Else, continue
     irq(clear, 4)           # Clear IRQ flag 4, allowing step_counter() to continue
     mov(x, y)               # Refills x with y
-#     mov(osr, y)
+    mov(osr, y)
 
 
      ### PIO interupt handlers ###
@@ -112,12 +113,12 @@ def pio_3_handler(sm): # Motor 4
     print(sm, "r:", r_last)
 
      ### Setting up state machines ###
-sc_freq = 10_000_000 # step_counter frequency
-ss_freq = 10_000_000 # step_speed frequency
+sc_freq = 1_000_000 # step_counter frequency
+ss_freq = 1_000_000 # step_speed frequency
 
 # Motor 1 - Pio Block 0
-step_pin_1 = Pin(17, Pin.OUT)
-dir_pin_1 = Pin(16, Pin.OUT)         # Defines Pin 16 as direction pin of motor 1 and as an Output pin
+step_pin_1 = Pin(19, Pin.OUT)
+dir_pin_1 = Pin(18, Pin.OUT)         # Defines Pin 16 as direction pin of motor 1 and as an Output pin
 sm_0 = StateMachine(0,           # Creates object called sm_0 and binds it to state machine 0 inPIO block 0
     step_counter,                    # Assigns step_counter as PIO program/function
     freq=sc_freq,                    # Sets the PIO frequency to sc_freq
@@ -131,25 +132,25 @@ sm_1 = StateMachine(1,           # Creates object called sm_1 and binds it to st
 )
 
 # Motor 2 - Pio Block 1
-step_pin_2 = Pin(14, Pin.OUT)                                                  # Step Pin 4
-dir_pin_2 = Pin(15, Pin.OUT)                                                   # Direction Pin 5
-sm_4 = StateMachine(4, step_counter, freq=sc_freq, sideset_base=step_pin_2) # Statemachine 4 - PIO block 1
+step_pin_2 = Pin(16, Pin.OUT)                                                  # Step Pin 4
+dir_pin_2 = Pin(17, Pin.OUT)                                                   # Direction Pin 5
+sm_4 = StateMachine(4, step_counter, freq=sc_freq+1, sideset_base=step_pin_2) # Statemachine 4 - PIO block 1
 sm_4.irq(pio_1_handler)                                                        #
-sm_5 = StateMachine(5, step_speed, freq=ss_freq)                        # Statemachine 5 - PIO block 1
+sm_5 = StateMachine(5, step_speed, freq=ss_freq+1)                        # Statemachine 5 - PIO block 1
 
 # Motor 3 - Pio Block 0
-step_pin_3 = Pin(6, Pin.OUT)                                                  # Step Pin 5
-dir_pin_3 = Pin(7, Pin.OUT)                                                   # Direction Pin 6
-sm_2 = StateMachine(2, step_counter, freq=sc_freq, sideset_base=step_pin_3) # Statemachine 2 - PIO block 0
+step_pin_3 = Pin(26, Pin.OUT)                                                  # Step Pin 5
+dir_pin_3 = Pin(22, Pin.OUT)                                                   # Direction Pin 6
+sm_2 = StateMachine(2, step_counter, freq=sc_freq+2, sideset_base=step_pin_3) # Statemachine 2 - PIO block 0
 sm_2.irq(pio_2_handler)                                                        #
-sm_3 = StateMachine(3, step_speed, freq=ss_freq)                        # Statemachine 3 - PIO block 0
+sm_3 = StateMachine(3, step_speed, freq=ss_freq+2)                        # Statemachine 3 - PIO block 0
 
 # Motor 4 - Pio Block 1
-step_pin_4 = Pin(8, Pin.OUT)                                                  # Step Pin 8
-dir_pin_4 = Pin(9, Pin.OUT)                                                   # Direction Pin 9
-sm_6 = StateMachine(6, step_counter, freq=sc_freq, sideset_base=step_pin_4) # Statemachine 6 - PIO block 1
+step_pin_4 = Pin(28, Pin.OUT)                                                  # Step Pin 8
+dir_pin_4 = Pin(27, Pin.OUT)                                                   # Direction Pin 9
+sm_6 = StateMachine(6, step_counter, freq=sc_freq+3, sideset_base=step_pin_4) # Statemachine 6 - PIO block 1
 sm_6.irq(pio_3_handler)                                                        #
-sm_7 = StateMachine(7, step_speed, freq=ss_freq)                        # Statemachine 7 - PIO block 1
+sm_7 = StateMachine(7, step_speed, freq=ss_freq+3)                        # Statemachine 7 - PIO block 1
 
 # Activating all state machine
 sm_0.active(1), sm_1.active(1) # Motor 1 State machine 0 and 1 in PIO block 0
@@ -184,17 +185,20 @@ def runner(x, y, z, r): # Feeds the PIO programs and activates them.
         dir_pin_4.value(1)
         r_steps = r_steps * (-1)
     delay_adjustment = motor_sync(x, y, z, r)
-    print(delay_adjustment)
+#     print(delay_adjustment)
 
     # Clear sm_1 so that only new values exists as delays
     sm_1.exec("mov(osr, null)"), sm_1.exec("mov(x, null)"), sm_1.exec("mov(y, null)") # Clear statemachine sm_1
-    sm_1.put(delay_adjustment[0]*1)                              # Add new delay value
     sm_5.exec("mov(osr, null)"), sm_5.exec("mov(x, null)"), sm_5.exec("mov(y, null)") # Clear statemachine sm_5
-    sm_5.put(delay_adjustment[1]*1)                              # Add new delay value
     sm_3.exec("mov(osr, null)"), sm_3.exec("mov(x, null)"), sm_3.exec("mov(y, null)") # Clear statemachine sm_3
-    sm_3.put(delay_adjustment[2]*1)                              # Add new delay value
     sm_7.exec("mov(osr, null)"), sm_7.exec("mov(x, null)"), sm_7.exec("mov(y, null)") # Clear statemachine sm_7
-    sm_7.put(delay_adjustment[3]*1)                              # Add new delay value
+    
+    sm_1.put(delay_adjustment[0])                              # Add new delay value
+    sm_5.put(delay_adjustment[1])                              # Add new delay value
+    sm_3.put(delay_adjustment[2])                              # Add new delay value
+    sm_7.put(delay_adjustment[3])                              # Add new delay value
+    
+    sleep(0.5)
     
     sm_0.put(x_steps)                                                                 # Add new n steps to sm_0
     sm_4.put(y_steps)                                                                 # Add new n steps to sm_4
@@ -306,23 +310,23 @@ def motor_sync(x, y, z, r):
     
     print(x_delay, y_delay, z_delay, r_delay)
     
-    if x_delay != 1:
-        x_delay = -(-base_delay // x_delay)*2 + 25
+    if x_delay != 1.0:
+        x_delay = -(-base_delay // x_delay)#*2
     else:
         x_delay = base_delay
     
-    if y_delay != 1:
-        y_delay = -(-base_delay // y_delay)*2 + 25
+    if y_delay != 1.0:
+        y_delay = -(-base_delay // y_delay)#*2
     else:
         y_delay = base_delay
     
-    if z_delay != 1:
-        z_delay = -(-base_delay // z_delay)*2 + 25
+    if z_delay != 1.0:
+        z_delay = -(-base_delay // z_delay)#*2
     else:
         z_delay = base_delay
     
-    if r_delay != 1:
-        r_delay = -(-base_delay // r_delay)*2 + 25
+    if r_delay != 1.0:
+        r_delay = -(-base_delay // r_delay)#*2
     else:
         r_delay = base_delay
     
@@ -332,7 +336,7 @@ def motor_sync(x, y, z, r):
 
 if __name__ == "__main__":
     machine.freq(250_000_000)
-    print(machine.freq()/1000000, "MHz clock-speed")
+#     print(machine.freq()/1000000, "MHz clock-speed")
 #     input("\nPress any key to test:\nstep_instructor()")
 #     step_instructor(((200, 400, -400, 800), (800, -200, 800, -800)))
 
